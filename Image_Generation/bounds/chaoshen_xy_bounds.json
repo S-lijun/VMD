@@ -1,0 +1,119 @@
+{
+  "dataset": "chaoshen",
+  "scan_root": "/rdcw/fs2/sibai/Active/jayden/VMD/MD/Data/ChaoShen/training_files",
+  "n_users": 28,
+  "users": {
+    "user1": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user2": {
+      "max_x": 1439.0,
+      "max_y": 899.0
+    },
+    "user3": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user4": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user5": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user6": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user7": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user8": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user9": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user10": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user11": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user12": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user13": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user14": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user15": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user16": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user17": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user18": {
+      "max_x": 1740.0,
+      "max_y": 1023.0
+    },
+    "user19": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user20": {
+      "max_x": 1365.0,
+      "max_y": 767.0
+    },
+    "user21": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user22": {
+      "max_x": 1365.0,
+      "max_y": 767.0
+    },
+    "user23": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user24": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user25": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    },
+    "user26": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user27": {
+      "max_x": 1279.0,
+      "max_y": 1023.0
+    },
+    "user28": {
+      "max_x": 1023.0,
+      "max_y": 767.0
+    }
+  }
+}

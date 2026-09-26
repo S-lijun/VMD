@@ -1,0 +1,91 @@
+{
+  "dataset": "dfl",
+  "scan_root": "/storage1/fs1/sibai/Active/jayden/VMD/MD/Data/DFL/training_files",
+  "n_users": 21,
+  "users": {
+    "User1": {
+      "max_x": 6159.0,
+      "max_y": 2170.0
+    },
+    "User2": {
+      "max_x": 2111.0,
+      "max_y": 1190.0
+    },
+    "User3": {
+      "max_x": 2244.0,
+      "max_y": 1281.0
+    },
+    "User4": {
+      "max_x": 2097.0,
+      "max_y": 1330.0
+    },
+    "User5": {
+      "max_x": 3030.0,
+      "max_y": 1590.0
+    },
+    "User6": {
+      "max_x": 1737.0,
+      "max_y": 1126.0
+    },
+    "User7": {
+      "max_x": 3851.0,
+      "max_y": 1221.0
+    },
+    "User8": {
+      "max_x": 1592.0,
+      "max_y": 1017.0
+    },
+    "User9": {
+      "max_x": 1493.0,
+      "max_y": 902.0
+    },
+    "User10": {
+      "max_x": 1688.0,
+      "max_y": 3560.0
+    },
+    "User11": {
+      "max_x": 1919.0,
+      "max_y": 1079.0
+    },
+    "User12": {
+      "max_x": 1760.0,
+      "max_y": 1076.0
+    },
+    "User13": {
+      "max_x": 2518.0,
+      "max_y": 2050.0
+    },
+    "User14": {
+      "max_x": 2287.0,
+      "max_y": 1785.0
+    },
+    "User15": {
+      "max_x": 4645.0,
+      "max_y": 1857.0
+    },
+    "User16": {
+      "max_x": 1681.0,
+      "max_y": 1006.0
+    },
+    "User17": {
+      "max_x": 2143.0,
+      "max_y": 1267.0
+    },
+    "User18": {
+      "max_x": 4341.0,
+      "max_y": 1661.0
+    },
+    "User19": {
+      "max_x": 4438.0,
+      "max_y": 7517.0
+    },
+    "User20": {
+      "max_x": 5656.0,
+      "max_y": 6535.0
+    },
+    "User21": {
+      "max_x": 1545.0,
+      "max_y": 1837.0
+    }
+  }
+}
