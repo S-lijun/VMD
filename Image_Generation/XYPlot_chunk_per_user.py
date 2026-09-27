@@ -37,6 +37,7 @@ from XYPlot_per_user import (  # noqa: E402
 )
 
 TENSOR_SUBDIR = "Chong_chunk_per_user"
+N_FOLDS = 5
 
 
 def natural_key(string):
@@ -65,9 +66,18 @@ def _clean_df(dataset, df):
     raise ValueError(dataset)
 
 
+def is_skipped_user_dir(name):
+    """Data/TWOS 下面还有划分目录，不能当成用户。"""
+    lower = name.lower()
+    return lower == "training_files" or lower.startswith("testing_files")
+
+
 def list_users(data_root):
     return sorted(
-        [u for u in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, u))],
+        [
+            u for u in os.listdir(data_root)
+            if os.path.isdir(os.path.join(data_root, u)) and not is_skipped_user_dir(u)
+        ],
         key=natural_key,
     )
 
@@ -87,6 +97,38 @@ def split_by_chunk_size(events, chunk_size):
     if chunk_size <= 0:
         raise ValueError("chunk_size must be a positive integer.")
     return [events[i:i + chunk_size] for i in range(0, len(events), chunk_size)]
+
+
+def contiguous_fold_bounds(n_events, n_folds=N_FOLDS):
+    """把一个 session 的事件按顺序切成 n_folds 段，段与段首尾相接、不重叠。"""
+    return [
+        (i * n_events // n_folds, (i + 1) * n_events // n_folds)
+        for i in range(n_folds)
+    ]
+
+
+def load_events(dataset, path):
+    df = pd.read_csv(path)
+    df = _clean_df(dataset, df)
+    return df.to_dict("records")
+
+
+def sequences_from_events(events, chunk_size):
+    if len(events) < 2:
+        return []
+    return [seq for seq in split_by_chunk_size(events, chunk_size) if len(seq) >= 2]
+
+
+def iter_session_fold_sequences(events, chunk_size, n_folds=N_FOLDS):
+    """每一折只在自己那段连续事件里切 chunk，chunk 不会跨到别的折。"""
+    for fold, (start, end) in enumerate(contiguous_fold_bounds(len(events), n_folds)):
+        yield fold, sequences_from_events(events[start:end], chunk_size)
+
+
+def session_sequence_groups(events, chunk_size, five_fold):
+    if five_fold:
+        return list(iter_session_fold_sequences(events, chunk_size))
+    return [(None, sequences_from_events(events, chunk_size))]
 
 
 def scan_user_min_xy(dataset, training_root):
@@ -133,24 +175,17 @@ def _shift_seq(seq, min_x, min_y):
 
 
 def _session_sequences(dataset, path, chunk_size):
-    df = pd.read_csv(path)
-    df = _clean_df(dataset, df)
-
-    events = df.to_dict("records")
-    if len(events) < 2:
-        return []
-
-    sequences = split_by_chunk_size(events, chunk_size)
-    return [seq for seq in sequences if len(seq) >= 2]
+    return sequences_from_events(load_events(dataset, path), chunk_size)
 
 
-def count_samples(dataset, data_root, chunk_size):
+def count_samples(dataset, data_root, chunk_size, five_fold=False):
     total = 0
     for user in list_users(data_root):
         user_dir = os.path.join(data_root, user)
         for file in list_session_files(user_dir):
-            path = os.path.join(user_dir, file)
-            total += len(_session_sequences(dataset, path, chunk_size))
+            events = load_events(dataset, os.path.join(user_dir, file))
+            for _, sequences in session_sequence_groups(events, chunk_size, five_fold):
+                total += len(sequences)
     return total
 
 
@@ -170,7 +205,8 @@ def _written_count(labels):
 
 
 def process_dataset_tensors(
-    dataset, data_root, out_dir, user_max_xy, user_min_xy, chunk_size, resume=False
+    dataset, data_root, out_dir, user_max_xy, user_min_xy, chunk_size,
+    resume=False, five_fold=False,
 ):
     users = list_users(data_root)
     num_users = len(users)
@@ -181,9 +217,12 @@ def process_dataset_tensors(
     print("Chunk size:", chunk_size)
     print("Per-user max bounds loaded for", len(user_max_xy), "users (from training_root).")
     print("Rendering: per-user screen coords (same as XYPlot_per_user) |", TARGET_SIZE, "x", TARGET_SIZE)
-    print("\n[Phase] Generating chunk + per-user XYPlot tensors...")
+    if five_fold:
+        print("\n[Phase] Generating chunk + per-user XYPlot tensors, {} contiguous folds per session...".format(N_FOLDS))
+    else:
+        print("\n[Phase] Generating chunk + per-user XYPlot tensors...")
 
-    total_samples = count_samples(dataset, data_root, chunk_size)
+    total_samples = count_samples(dataset, data_root, chunk_size, five_fold=five_fold)
     tensor_root = os.path.join(out_dir, TENSOR_SUBDIR)
     os.makedirs(tensor_root, exist_ok=True)
 
@@ -192,6 +231,7 @@ def process_dataset_tensors(
 
     img_path = os.path.join(tensor_root, "images.npy")
     lab_path = os.path.join(tensor_root, "labels.npy")
+    fold_path = os.path.join(tensor_root, "folds.npy")
     mmap_shape_img = (total_samples, 3, H, W)
     mmap_shape_lab = (total_samples, num_users)
 
@@ -200,8 +240,16 @@ def process_dataset_tensors(
             raise FileNotFoundError(
                 "resume requested but images.npy/labels.npy missing under " + tensor_root
             )
+        if five_fold and not os.path.isfile(fold_path):
+            raise FileNotFoundError(
+                "resume requested but folds.npy missing under " + tensor_root
+            )
         images = np.memmap(img_path, dtype=np.uint8, mode="r+", shape=mmap_shape_img)
         labels = np.memmap(lab_path, dtype=np.uint8, mode="r+", shape=mmap_shape_lab)
+        folds = (
+            np.memmap(fold_path, dtype=np.uint8, mode="r+", shape=(total_samples,))
+            if five_fold else None
+        )
         start_idx = _written_count(labels)
         print("[resume] already written:", start_idx, "/", total_samples)
     else:
@@ -211,6 +259,10 @@ def process_dataset_tensors(
             )
         images = np.memmap(img_path, dtype=np.uint8, mode="w+", shape=mmap_shape_img)
         labels = np.memmap(lab_path, dtype=np.uint8, mode="w+", shape=mmap_shape_lab)
+        folds = (
+            np.memmap(fold_path, dtype=np.uint8, mode="w+", shape=(total_samples,))
+            if five_fold else None
+        )
         start_idx = 0
 
     sessions = []
@@ -231,35 +283,44 @@ def process_dataset_tensors(
         for file in list_session_files(user_dir):
             path = os.path.join(user_dir, file)
             session = os.path.splitext(file)[0]
-            sequences = _session_sequences(dataset, path, chunk_size)
-            print(f"   Session: {session} -> {len(sequences)} chunks")
+            events = load_events(dataset, path)
+            groups = session_sequence_groups(events, chunk_size, five_fold)
+            n_chunks = sum(len(sequences) for _, sequences in groups)
+            print(f"   Session: {session} -> {n_chunks} chunks")
 
-            for seq in sequences:
-                if idx < start_idx:
+            for fold, sequences in groups:
+                for seq in sequences:
+                    if idx < start_idx:
+                        sessions.append(session)
+                        if folds is not None:
+                            folds[idx] = fold
+                        idx += 1
+                        continue
+
+                    if catching_up:
+                        print("[resume] rendering from idx", idx, "user", user, "session", session)
+                        catching_up = False
+
+                    img = render_sequence(_shift_seq(seq, min_x, min_y), canvas_w, canvas_h)
+                    if img is None:
+                        continue
+
+                    if img.shape[:2] != (H, W):
+                        img = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
+
+                    images[idx] = bgr_to_tensor_chw(img)
+                    y = np.zeros(num_users, dtype=np.uint8)
+                    y[user_to_idx[user]] = 1
+                    labels[idx] = y
                     sessions.append(session)
+                    if folds is not None:
+                        folds[idx] = fold
                     idx += 1
-                    continue
-
-                if catching_up:
-                    print("[resume] rendering from idx", idx, "user", user, "session", session)
-                    catching_up = False
-
-                img = render_sequence(_shift_seq(seq, min_x, min_y), canvas_w, canvas_h)
-                if img is None:
-                    continue
-
-                if img.shape[:2] != (H, W):
-                    img = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
-
-                images[idx] = bgr_to_tensor_chw(img)
-                y = np.zeros(num_users, dtype=np.uint8)
-                y[user_to_idx[user]] = 1
-                labels[idx] = y
-                sessions.append(session)
-                idx += 1
 
     images.flush()
     labels.flush()
+    if folds is not None:
+        folds.flush()
     np.save(
         os.path.join(tensor_root, "sessions.npy"),
         np.array(sessions, dtype=object),
@@ -269,12 +330,12 @@ def process_dataset_tensors(
 
 def process_dataset(
     dataset, data_root, out_dir, user_max_xy, user_min_xy, chunk_size,
-    tensors=False, resume=False,
+    tensors=False, resume=False, five_fold=False,
 ):
     if tensors:
         process_dataset_tensors(
             dataset, data_root, out_dir, user_max_xy, user_min_xy, chunk_size,
-            resume=resume,
+            resume=resume, five_fold=five_fold,
         )
         return
 
@@ -302,27 +363,24 @@ def process_dataset(
             session = os.path.splitext(file)[0]
             print("   Session:", session)
 
-            df = pd.read_csv(path)
-            df = _clean_df(dataset, df)
-            events = df.to_dict("records")
+            events = load_events(dataset, path)
 
             print("      Events:", len(events))
-            if len(events) < 2:
-                continue
+            groups = session_sequence_groups(events, chunk_size, five_fold)
+            print("      Chunks:", sum(len(sequences) for _, sequences in groups))
 
-            sequences = split_by_chunk_size(events, chunk_size)
-            print("      Chunks:", len(sequences))
-
-            for i, seq in enumerate(sequences):
-                if len(seq) < 2:
-                    continue
-                save_path = os.path.join(
-                    out_dir,
-                    TENSOR_SUBDIR,
-                    user,
-                    f"{session}-{i}.png",
-                )
-                draw_sequence(_shift_seq(seq, min_x, min_y), save_path, canvas_w, canvas_h)
+            for fold, sequences in groups:
+                for i, seq in enumerate(sequences):
+                    parts = [out_dir]
+                    if fold is not None:
+                        parts.append("fold%d" % fold)
+                    parts.extend([TENSOR_SUBDIR, user, f"{session}-{i}.png"])
+                    draw_sequence(
+                        _shift_seq(seq, min_x, min_y),
+                        os.path.join(*parts),
+                        canvas_w,
+                        canvas_h,
+                    )
 
 
 # ============================================================
@@ -379,6 +437,12 @@ def main():
         default=False,
         help="Continue an interrupted --tensors run without wiping images.npy.",
     )
+    parser.add_argument(
+        "--five-fold",
+        action="store_true",
+        default=False,
+        help="每个 session 按事件顺序切成 5 段连续事件再切 chunk。tensors 时多写 folds.npy，取值 0–4。",
+    )
     args = parser.parse_args()
 
     training_rel = args.training_root or DEFAULT_TRAINING_ROOT[args.dataset]
@@ -395,6 +459,15 @@ def main():
     print("[out_dir]", out_dir)
     print("Bounds JSON:", bounds_json)
     print("Chunk size:", args.sizes)
+    skipped = sorted(
+        [
+            name for name in os.listdir(data_root)
+            if os.path.isdir(os.path.join(data_root, name)) and is_skipped_user_dir(name)
+        ],
+        key=natural_key,
+    )
+    if skipped:
+        print("Excluded dirs:", ", ".join(skipped))
 
     user_max_xy = get_or_scan_user_max_xy(
         dataset=args.dataset,
@@ -417,6 +490,7 @@ def main():
         args.sizes,
         tensors=args.tensors,
         resume=args.resume,
+        five_fold=args.five_fold,
     )
     print("\nChunk + per-user XYPlot generation finished.")
 
