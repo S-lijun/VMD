@@ -1,0 +1,25 @@
+# MD environment, pinned from the working env (Python 3.9, md_env).
+# Import reports torch 2.8.0+cu128 / torchvision 0.23.0+cu128 (CUDA 12.8).
+# Install the three PyTorch packages from the CUDA index, then the rest from PyPI:
+#   pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+#   pip install -r requirements.txt
+
+torch==2.8.0
+torchvision==0.23.0
+torchaudio==2.8.0
+
+numpy==2.0.2
+pandas==2.3.3
+scipy==1.13.1
+scikit-learn==1.6.1
+opencv-python==4.13.0.92
+Pillow==11.3.0
+matplotlib==3.9.4
+tqdm==4.68.3
+timm==1.0.27
+imageio-ffmpeg==0.6.0
+
+# Imported by a few scripts, not installed in the working env:
+# grad-cam          # Grad_CAM/
+# seaborn           # velocity_distribution.py
+# tensorflow        # Image_Generation/SOTA/SRP_tf.py
