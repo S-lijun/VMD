@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-R = global-diag SRP, G = position stripes, B = |v| velocity stripes.
+R=B=SRP with global-diag brightness; G=position stripes.
 
-  R (same brightness path as SRP_chunk_uc_rb_g_xy_diag):
-    1) (x',y') = ((x-min_x)/diag, (y-min_y)/diag)  # per-user training diag
-    2) dist = pairwise ||p'_i-p'_j||
-    3) srp = min(dist, epsilon)   # NO local dist min-max stretch
-  G: position vertical stripes (per-user min-max; supports negative coords)
-       lower (i > j): (x[j]-min_x)/(max_x-min_x)
-       upper (i < j): (y[j]-min_y)/(max_y-min_y)
-       diagonal: 0.5 * (x_norm[i] + y_norm[i])
-  B: |v| vertical stripes via global CDF (same encoding as
-     ChongSOTA/TemporalEncoding/SRP_chunk_velocity.py blue channel)
+  R/B (contrast with local SRP_chunk):
+    OLD: chunk-local coord scale -> dist -> per-trajectory dist min-max -> brightness
+    NEW:
+      1) global coord norm by user diag:
+           (x',y') = ((x-min_x)/diag, (y-min_y)/diag)
+         diag = sqrt((max_x-min_x)^2+(max_y-min_y)^2) from training bounds
+      2) dist = pairwise ||p'_i-p'_j||   # already diag-units, corner-to-corner = 1
+      3) brightness = min(dist, epsilon)  # NO local dist min-max stretch
 
-  min/max/diag: per-user training bounds JSON (RP_uc/bounds/).
+  G (same as SRP_chunk_uc_rb_g_xy):
+    lower (i > j): (x[j]-min_x)/(max_x-min_x)
+    upper (i < j): (y[j]-min_y)/(max_y-min_y)
+    diagonal: 0.5 * (x_norm + y_norm)
 
 Usage:
-  python SRP_chunk_uc_r_gxy_b_vel_diag.py --dataset balabit \\
+  python SRP_chunk_uc_rb_g_xy_diag.py --dataset balabit \\
     --data_root Data/Balabit-dataset/training_files \\
-    --velocity_dist Balabit_velocity_distribution_raw.npz \\
-    --out_dir Images/Balabit/SRP_uc_r_gxy_b_vel_diag --sizes 125
+    --out_dir Images/Balabit/SRP_uc_rb_g_xy_diag --sizes 125
 """
 
 from __future__ import print_function
@@ -29,7 +29,6 @@ import os
 
 import cv2
 import numpy as np
-from scipy.stats import rankdata
 
 from srp_uc_common import (
     DEFAULT_SCAN_ROOT,
@@ -43,40 +42,15 @@ from srp_uc_common import (
     list_users,
     load_events,
     natural_key,
-    render_srp_r_gxy_b_vel_diag,
+    render_srp_rb_g_xy_diag,
     resolve_path,
     rgb_to_tensor_chw,
     session_window_groups,
 )
 
 
-def load_raw_velocity_distribution(path):
-    data = np.load(path)
-    velocities = data["values"]
-    print("\n[Velocity Distribution]")
-    print("Samples:", len(velocities))
-    print("Min:", velocities.min())
-    print("Max:", velocities.max())
-    return velocities
-
-
-def build_runtime_cdf(raw_v, clip_pct):
-    print("\nBuilding velocity runtime CDF")
-    v_upper = np.percentile(raw_v, clip_pct)
-    v_clipped = raw_v[raw_v <= v_upper]
-    ranks = rankdata(v_clipped, method="average")
-    cdf = (ranks - 1) / (len(v_clipped) - 1 + 1e-8)
-    order = np.argsort(v_clipped)
-    v_sorted = v_clipped[order]
-    cdf_sorted = cdf[order]
-    print("Runtime samples:", len(v_sorted))
-    print("Runtime max:", v_sorted.max())
-    return v_sorted, cdf_sorted
-
-
 def process_dataset_tensors(
-    dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf,
-    five_fold=False,
+    dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, five_fold=False
 ):
     users = list_users(data_root)
     num_users = len(users)
@@ -84,12 +58,12 @@ def process_dataset_tensors(
 
     print("\nDataset:", dataset)
     print("Users:", num_users)
-    print("Mode: R=SRP global-diag (no local dist stretch), G=xy, B=|v| stripes")
+    print("Mode: R=B=SRP global-diag coord norm (no local dist stretch), G=xy stripes")
     print("Per-user bounds loaded for", len(bounds.get("users", {})), "users.")
     if five_fold:
-        print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy / B_vel) tensors, {} contiguous folds per session...".format(N_FOLDS))
+        print("\n[Phase] Generating SRP RGB (R=B=global-diag, G=xy) tensors, {} contiguous folds per session...".format(N_FOLDS))
     else:
-        print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy / B_vel) tensors...")
+        print("\n[Phase] Generating SRP RGB (R=B=global-diag, G=xy) tensors...")
 
     for chunk_size in sizes:
         H = int(output_size) if output_size and int(output_size) > 0 else chunk_size
@@ -149,8 +123,8 @@ def process_dataset_tensors(
 
                 for fold, windows in groups:
                     for seq in windows:
-                        img = render_srp_r_gxy_b_vel_diag(
-                            seq, epsilon, output_size, user_bounds, v_cdf
+                        img = render_srp_rb_g_xy_diag(
+                            seq, epsilon, output_size, user_bounds
                         )
                         if img is None:
                             continue
@@ -175,12 +149,12 @@ def process_dataset_tensors(
 
 
 def process_dataset(
-    dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf,
+    dataset, data_root, out_dir, sizes, epsilon, output_size, bounds,
     tensors=False, five_fold=False,
 ):
     if tensors:
         process_dataset_tensors(
-            dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf,
+            dataset, data_root, out_dir, sizes, epsilon, output_size, bounds,
             five_fold=five_fold,
         )
         return
@@ -188,9 +162,9 @@ def process_dataset(
     users = list_users(data_root)
     print("\nDataset:", dataset)
     print("Users:", len(users))
-    print("Mode: R=SRP global-diag (no local dist stretch), G=xy, B=|v| stripes")
+    print("Mode: R=B=SRP global-diag coord norm (no local dist stretch), G=xy stripes")
     print("Per-user bounds loaded for", len(bounds.get("users", {})), "users.")
-    print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy / B_vel) PNGs...")
+    print("\n[Phase] Generating SRP RGB (R=B=global-diag, G=xy) PNGs...")
 
     for user in users:
         user_dir = os.path.join(data_root, user)
@@ -218,8 +192,8 @@ def process_dataset(
 
                 for fold, windows in groups:
                     for i, seq in enumerate(windows):
-                        img = render_srp_r_gxy_b_vel_diag(
-                            seq, epsilon, output_size, user_bounds, v_cdf
+                        img = render_srp_rb_g_xy_diag(
+                            seq, epsilon, output_size, user_bounds
                         )
                         if img is None:
                             continue
@@ -239,69 +213,62 @@ def process_dataset(
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            "R=SRP global-diag (no local dist stretch); "
-            "G=xy position stripes; B=|v| velocity stripes."
+            "R=B=SRP with global-diag coord normalization "
+            "(no per-trajectory dist min-max); G=xy position stripes."
         )
     )
     parser.add_argument("--dataset", required=True, choices=["balabit", "chaoshen", "dfl", "twos"])
     parser.add_argument(
         "--data_root",
         required=True,
-        help="Data root to render (training or testing). Does not affect min/max statistics.",
-    )
-    parser.add_argument(
-        "--velocity_dist",
-        required=True,
-        help="npz with values array (e.g. Balabit_velocity_distribution_raw.npz).",
+        help="要画图的数据根目录（training 或 testing）；不影响 min/max 统计。",
     )
     parser.add_argument("--out_dir", required=True)
     parser.add_argument("--sizes", type=int, nargs="+", default=[125])
-    parser.add_argument("--epsilon", type=float, default=1.0)
+    parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=1.0,
+        help="亮度上限：先按 diag 归一化坐标再算 dist，srp=min(dist, epsilon)。默认 1.0。",
+    )
     parser.add_argument(
         "--output_size",
         type=int,
         default=448,
-        help="If > 0, resize to output_size x output_size; 0 keeps N x N.",
-    )
-    parser.add_argument(
-        "--v_percentile",
-        type=float,
-        default=100,
-        help="Upper clip percentile for speed CDF.",
+        help="若 > 0，Resize 为 output_size×output_size；0 表示保持 N×N。",
     )
     parser.add_argument(
         "--scan_root",
         default=None,
-        help="Root used to scan per-user min/max. Defaults to training_files. Do not change this when generating testing data.",
+        help="扫描 per-user min/max；默认 training_files。生成 testing 时不要改。",
     )
     parser.add_argument(
         "--bounds_json",
         default=None,
-        help="Defaults to RP_uc/bounds/<dataset>_xy_bounds.json.",
+        help="默认 RP_uc/bounds/<dataset>_xy_bounds.json。",
     )
     parser.add_argument(
         "--rescan_bounds",
         action="store_true",
         default=False,
-        help="Force a rescan of the bounds JSON from scan_root.",
+        help="强制用 scan_root 重扫 bounds JSON。",
     )
     parser.add_argument(
         "--tensors",
         action="store_true",
         default=False,
-        help="Write images.npy / labels.npy / sessions.npy.",
+        help="输出 images.npy / labels.npy / sessions.npy。",
     )
     parser.add_argument(
         "--five-fold",
         action="store_true",
         default=False,
-        help="Split each session into 5 contiguous event segments in order, then window inside each segment. With --tensors, also write folds.npy with values 0-4.",
+        help="每个 session 按事件顺序切成 5 段连续事件再开窗。tensors 时多写 folds.npy，取值 0–4。",
     )
     args = parser.parse_args()
 
     data_root = resolve_path(args.data_root)
     out_dir = resolve_path(args.out_dir)
-    dist_path = resolve_path(args.velocity_dist)
     scan_rel = args.scan_root or DEFAULT_SCAN_ROOT[args.dataset]
     scan_root = resolve_path(scan_rel)
     bounds_json = (
@@ -309,10 +276,9 @@ def main():
         else default_bounds_json(args.dataset)
     )
 
-    print("Mode: R=SRP global-diag (no local dist stretch), G=xy, B=|v| stripes")
+    print("Mode: R=B=SRP global-diag coord norm, G=xy stripes")
     print("Resolved data_root:", data_root)
     print("Resolved out_dir:", out_dir)
-    print("[velocity_dist]", dist_path)
     print("Resolved scan_root:", scan_root)
     print("Bounds JSON:", bounds_json)
     skipped = sorted(
@@ -324,9 +290,6 @@ def main():
     )
     if skipped:
         print("Excluded dirs:", ", ".join(skipped))
-
-    raw_v = load_raw_velocity_distribution(dist_path)
-    v_cdf = build_runtime_cdf(raw_v, args.v_percentile)
 
     bounds = get_or_scan_bounds(
         dataset=args.dataset,
@@ -352,7 +315,6 @@ def main():
         epsilon=args.epsilon,
         output_size=args.output_size,
         bounds=bounds,
-        v_cdf=v_cdf,
         tensors=args.tensors,
         five_fold=args.five_fold,
     )

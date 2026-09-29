@@ -1,0 +1,7 @@
+{
+  "gmin_x": 0.0,
+  "gmax_x": 65535.0,
+  "gmin_y": 0.0,
+  "gmax_y": 65535.0,
+  "source_data_root": "C:\\Users\\lijun\\Mouse_Dynamics\\Data/Balabit-dataset/training_files"
+}

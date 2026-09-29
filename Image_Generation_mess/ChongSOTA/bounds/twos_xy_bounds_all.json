@@ -1,0 +1,103 @@
+{
+  "dataset": "twos",
+  "scan_root": "/storage1/fs1/sibai/Active/jayden/VMD/MD/Data/TWOS",
+  "n_users": 24,
+  "users": {
+    "User1": {
+      "max_x": 1919.0,
+      "max_y": 982.0
+    },
+    "User2": {
+      "max_x": 1899.0,
+      "max_y": 994.0
+    },
+    "User3": {
+      "max_x": 1919.0,
+      "max_y": 1095.0
+    },
+    "User4": {
+      "max_x": 1365.0,
+      "max_y": 767.0
+    },
+    "User5": {
+      "max_x": 1919.0,
+      "max_y": 1199.0
+    },
+    "User6": {
+      "max_x": 1535.0,
+      "max_y": 863.0
+    },
+    "User7": {
+      "max_x": 1535.0,
+      "max_y": 850.0
+    },
+    "User8": {
+      "max_x": 1901.0,
+      "max_y": 1114.0
+    },
+    "User9": {
+      "max_x": 2558.0,
+      "max_y": 1353.0
+    },
+    "User10": {
+      "max_x": 1919.0,
+      "max_y": 994.0
+    },
+    "User11": {
+      "max_x": 1214.0,
+      "max_y": 750.0
+    },
+    "User12": {
+      "max_x": 1365.0,
+      "max_y": 767.0
+    },
+    "User13": {
+      "max_x": 1444.0,
+      "max_y": 818.0
+    },
+    "User14": {
+      "max_x": 3839.0,
+      "max_y": 1199.0
+    },
+    "User15": {
+      "max_x": 1918.0,
+      "max_y": 1111.0
+    },
+    "User16": {
+      "max_x": 1279.0,
+      "max_y": 750.0
+    },
+    "User17": {
+      "max_x": 1919.0,
+      "max_y": 1111.0
+    },
+    "User18": {
+      "max_x": 1900.0,
+      "max_y": 1114.0
+    },
+    "User19": {
+      "max_x": 3196.0,
+      "max_y": 1439.0
+    },
+    "User20": {
+      "max_x": 1919.0,
+      "max_y": 1151.0
+    },
+    "User21": {
+      "max_x": 1919.0,
+      "max_y": 994.0
+    },
+    "User22": {
+      "max_x": 1919.0,
+      "max_y": 994.0
+    },
+    "User23": {
+      "max_x": 1535.0,
+      "max_y": 863.0
+    },
+    "User24": {
+      "max_x": 1918.0,
+      "max_y": 1105.0
+    }
+  }
+}

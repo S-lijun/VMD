@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-R = global-diag SRP, G = position stripes, B = |v| velocity stripes.
+R = global-diag SRP, G = xy halves, B = |v| velocity stripes.
 
-  R (same brightness path as SRP_chunk_uc_rb_g_xy_diag):
-    1) (x',y') = ((x-min_x)/diag, (y-min_y)/diag)  # per-user training diag
+  R (same as SRP_chunk_uc_r_gxy_b_vel_diag):
+    1) (x',y') = ((x-min_x)/diag, (y-min_y)/diag)
     2) dist = pairwise ||p'_i-p'_j||
     3) srp = min(dist, epsilon)   # NO local dist min-max stretch
-  G: position vertical stripes (per-user min-max; supports negative coords)
-       lower (i > j): (x[j]-min_x)/(max_x-min_x)
-       upper (i < j): (y[j]-min_y)/(max_y-min_y)
-       diagonal: 0.5 * (x_norm[i] + y_norm[i])
-  B: |v| vertical stripes via global CDF (same encoding as
-     ChongSOTA/TemporalEncoding/SRP_chunk_velocity.py blue channel)
-
-  min/max/diag: per-user training bounds JSON (RP_uc/bounds/).
+  G: two horizontal rectangles, vertical stripes (column j = event j)
+       top    rows [0, mid):    (y[j]-min_y)/(max_y-min_y)
+       bottom rows [mid, n):    (x[j]-min_x)/(max_x-min_x)
+  B: |v| vertical stripes via global CDF (full columns; already fair)
 
 Usage:
-  python SRP_chunk_uc_r_gxy_b_vel_diag.py --dataset balabit \\
+  python SRP_chunk_uc_r_gxy_b_vel_diag_halves.py --dataset balabit \\
     --data_root Data/Balabit-dataset/training_files \\
     --velocity_dist Balabit_velocity_distribution_raw.npz \\
-    --out_dir Images/Balabit/SRP_uc_r_gxy_b_vel_diag --sizes 125
+    --out_dir ImagesTensors/Balabit/SRP_chunk_uc_r_gxy_b_vel_diag_halves \\
+    --sizes 125 --tensors
 """
 
 from __future__ import print_function
@@ -33,20 +30,18 @@ from scipy.stats import rankdata
 
 from srp_uc_common import (
     DEFAULT_SCAN_ROOT,
-    N_FOLDS,
     count_windows,
     default_bounds_json,
+    generate_windows,
     get_or_scan_bounds,
     get_user_bounds,
-    is_skipped_user_dir,
     list_session_csvs,
     list_users,
     load_events,
     natural_key,
-    render_srp_r_gxy_b_vel_diag,
+    render_srp_r_gxy_b_vel_diag_halves,
     resolve_path,
     rgb_to_tensor_chw,
-    session_window_groups,
 )
 
 
@@ -75,8 +70,7 @@ def build_runtime_cdf(raw_v, clip_pct):
 
 
 def process_dataset_tensors(
-    dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf,
-    five_fold=False,
+    dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf
 ):
     users = list_users(data_root)
     num_users = len(users)
@@ -84,17 +78,14 @@ def process_dataset_tensors(
 
     print("\nDataset:", dataset)
     print("Users:", num_users)
-    print("Mode: R=SRP global-diag (no local dist stretch), G=xy, B=|v| stripes")
+    print("Mode: R=SRP global-diag, G=xy halves, B=|v| stripes")
     print("Per-user bounds loaded for", len(bounds.get("users", {})), "users.")
-    if five_fold:
-        print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy / B_vel) tensors, {} contiguous folds per session...".format(N_FOLDS))
-    else:
-        print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy / B_vel) tensors...")
+    print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy_halves / B_vel) tensors...")
 
     for chunk_size in sizes:
         H = int(output_size) if output_size and int(output_size) > 0 else chunk_size
         W = H
-        total_samples, _ = count_windows(dataset, data_root, chunk_size, five_fold=five_fold)
+        total_samples, _ = count_windows(dataset, data_root, chunk_size)
         tensor_root = os.path.join(out_dir, "event{}".format(chunk_size))
         os.makedirs(tensor_root, exist_ok=True)
 
@@ -113,14 +104,6 @@ def process_dataset_tensors(
             mode="w+",
             shape=(total_samples, num_users),
         )
-        folds = None
-        if five_fold:
-            folds = np.memmap(
-                os.path.join(tensor_root, "folds.npy"),
-                dtype=np.uint8,
-                mode="w+",
-                shape=(total_samples,),
-            )
 
         sessions = []
         idx = 0
@@ -142,55 +125,48 @@ def process_dataset_tensors(
                 path = os.path.join(user_dir, file)
                 session = os.path.splitext(file)[0]
                 events = load_events(dataset, path)
-                groups = session_window_groups(events, chunk_size, data_root, five_fold)
-                n_windows = sum(len(windows) for _, windows in groups)
+                windows = generate_windows(events, chunk_size, data_root)
                 print("  Session {} | chunk={} -> {} windows".format(
-                    session, chunk_size, n_windows))
+                    session, chunk_size, len(windows)))
 
-                for fold, windows in groups:
-                    for seq in windows:
-                        img = render_srp_r_gxy_b_vel_diag(
-                            seq, epsilon, output_size, user_bounds, v_cdf
-                        )
-                        if img is None:
-                            continue
-                        if img.shape[:2] != (H, W):
-                            img = cv2.resize(img, (W, H), interpolation=cv2.INTER_NEAREST)
+                for seq in windows:
+                    img = render_srp_r_gxy_b_vel_diag_halves(
+                        seq, epsilon, output_size, user_bounds, v_cdf
+                    )
+                    if img is None:
+                        continue
+                    if img.shape[:2] != (H, W):
+                        img = cv2.resize(img, (W, H), interpolation=cv2.INTER_NEAREST)
 
-                        images[idx] = rgb_to_tensor_chw(img)
-                        y = np.zeros(num_users, dtype=np.uint8)
-                        y[user_to_idx[user]] = 1
-                        labels[idx] = y
-                        sessions.append(session)
-                        if folds is not None:
-                            folds[idx] = fold
-                        idx += 1
+                    images[idx] = rgb_to_tensor_chw(img)
+                    y = np.zeros(num_users, dtype=np.uint8)
+                    y[user_to_idx[user]] = 1
+                    labels[idx] = y
+                    sessions.append(session)
+                    idx += 1
 
         images.flush()
         labels.flush()
-        if folds is not None:
-            folds.flush()
         np.save(os.path.join(tensor_root, "sessions.npy"), np.array(sessions, dtype=object))
         print("\nTensor dataset saved to: {} (wrote {} samples)".format(tensor_root, idx))
 
 
 def process_dataset(
     dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf,
-    tensors=False, five_fold=False,
+    tensors=False,
 ):
     if tensors:
         process_dataset_tensors(
-            dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf,
-            five_fold=five_fold,
+            dataset, data_root, out_dir, sizes, epsilon, output_size, bounds, v_cdf
         )
         return
 
     users = list_users(data_root)
     print("\nDataset:", dataset)
     print("Users:", len(users))
-    print("Mode: R=SRP global-diag (no local dist stretch), G=xy, B=|v| stripes")
+    print("Mode: R=SRP global-diag, G=xy halves, B=|v| stripes")
     print("Per-user bounds loaded for", len(bounds.get("users", {})), "users.")
-    print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy / B_vel) PNGs...")
+    print("\n[Phase] Generating SRP RGB (R=global-diag / G_xy_halves / B_vel) PNGs...")
 
     for user in users:
         user_dir = os.path.join(data_root, user)
@@ -211,43 +187,38 @@ def process_dataset(
             events = load_events(dataset, path)
 
             for chunk_size in sizes:
-                groups = session_window_groups(events, chunk_size, data_root, five_fold)
-                n_windows = sum(len(windows) for _, windows in groups)
+                windows = generate_windows(events, chunk_size, data_root)
                 print("  Session {} | chunk={} -> {} windows".format(
-                    session, chunk_size, n_windows))
+                    session, chunk_size, len(windows)))
 
-                for fold, windows in groups:
-                    for i, seq in enumerate(windows):
-                        img = render_srp_r_gxy_b_vel_diag(
-                            seq, epsilon, output_size, user_bounds, v_cdf
-                        )
-                        if img is None:
-                            continue
-                        parts = [out_dir]
-                        if fold is not None:
-                            parts.append("fold{}".format(fold))
-                        parts.extend([
-                            "event{}".format(chunk_size),
-                            user,
-                            "{}-{}.png".format(session, i),
-                        ])
-                        save_path = os.path.join(*parts)
-                        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-                        cv2.imwrite(save_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+                for i, seq in enumerate(windows):
+                    img = render_srp_r_gxy_b_vel_diag_halves(
+                        seq, epsilon, output_size, user_bounds, v_cdf
+                    )
+                    if img is None:
+                        continue
+                    save_path = os.path.join(
+                        out_dir,
+                        "event{}".format(chunk_size),
+                        user,
+                        "{}-{}.png".format(session, i),
+                    )
+                    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                    cv2.imwrite(save_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
 
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            "R=SRP global-diag (no local dist stretch); "
-            "G=xy position stripes; B=|v| velocity stripes."
+            "R=SRP global-diag; G=xy vertical stripes in top (y) / bottom (x) halves; "
+            "B=|v| velocity stripes."
         )
     )
     parser.add_argument("--dataset", required=True, choices=["balabit", "chaoshen", "dfl", "twos"])
     parser.add_argument(
         "--data_root",
         required=True,
-        help="Data root to render (training or testing). Does not affect min/max statistics.",
+        help="要画图的数据根目录（training 或 testing）；不影响 min/max 统计。",
     )
     parser.add_argument(
         "--velocity_dist",
@@ -261,7 +232,7 @@ def main():
         "--output_size",
         type=int,
         default=448,
-        help="If > 0, resize to output_size x output_size; 0 keeps N x N.",
+        help="若 > 0，Resize 为 output_size×output_size；0 表示保持 N×N。",
     )
     parser.add_argument(
         "--v_percentile",
@@ -272,30 +243,24 @@ def main():
     parser.add_argument(
         "--scan_root",
         default=None,
-        help="Root used to scan per-user min/max. Defaults to training_files. Do not change this when generating testing data.",
+        help="扫描 per-user min/max；默认 training_files。生成 testing 时不要改。",
     )
     parser.add_argument(
         "--bounds_json",
         default=None,
-        help="Defaults to RP_uc/bounds/<dataset>_xy_bounds.json.",
+        help="默认 RP_uc/bounds/<dataset>_xy_bounds.json。",
     )
     parser.add_argument(
         "--rescan_bounds",
         action="store_true",
         default=False,
-        help="Force a rescan of the bounds JSON from scan_root.",
+        help="强制用 scan_root 重扫 bounds JSON。",
     )
     parser.add_argument(
         "--tensors",
         action="store_true",
         default=False,
-        help="Write images.npy / labels.npy / sessions.npy.",
-    )
-    parser.add_argument(
-        "--five-fold",
-        action="store_true",
-        default=False,
-        help="Split each session into 5 contiguous event segments in order, then window inside each segment. With --tensors, also write folds.npy with values 0-4.",
+        help="输出 images.npy / labels.npy / sessions.npy。",
     )
     args = parser.parse_args()
 
@@ -309,21 +274,12 @@ def main():
         else default_bounds_json(args.dataset)
     )
 
-    print("Mode: R=SRP global-diag (no local dist stretch), G=xy, B=|v| stripes")
+    print("Mode: R=SRP global-diag, G=xy halves (top=y, bottom=x), B=|v|")
     print("Resolved data_root:", data_root)
     print("Resolved out_dir:", out_dir)
     print("[velocity_dist]", dist_path)
     print("Resolved scan_root:", scan_root)
     print("Bounds JSON:", bounds_json)
-    skipped = sorted(
-        [
-            name for name in os.listdir(data_root)
-            if os.path.isdir(os.path.join(data_root, name)) and is_skipped_user_dir(name)
-        ],
-        key=natural_key,
-    )
-    if skipped:
-        print("Excluded dirs:", ", ".join(skipped))
 
     raw_v = load_raw_velocity_distribution(dist_path)
     v_cdf = build_runtime_cdf(raw_v, args.v_percentile)
@@ -354,7 +310,6 @@ def main():
         bounds=bounds,
         v_cdf=v_cdf,
         tensors=args.tensors,
-        five_fold=args.five_fold,
     )
     print("\nDone.")
 

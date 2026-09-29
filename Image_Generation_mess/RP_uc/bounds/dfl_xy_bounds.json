@@ -1,0 +1,251 @@
+{
+  "dataset": "dfl",
+  "scan_root": "/storage1/fs1/sibai/Active/jayden/VMD/MD/Data/DFL/training_files",
+  "n_points": 87290544,
+  "n_files": 423,
+  "n_users": 21,
+  "users": {
+    "User1": {
+      "min_x": -2431.0,
+      "max_x": 6159.0,
+      "min_y": -3996.0,
+      "max_y": 2170.0,
+      "corner_x": 6159.0,
+      "corner_y": 2170.0,
+      "diag": 10573.91393950225,
+      "n_points": 1701156,
+      "n_files": 31
+    },
+    "User2": {
+      "min_x": -1998.0,
+      "max_x": 2111.0,
+      "min_y": -106.0,
+      "max_y": 1190.0,
+      "corner_x": 2111.0,
+      "corner_y": 1190.0,
+      "diag": 4308.5376869652655,
+      "n_points": 835885,
+      "n_files": 20
+    },
+    "User3": {
+      "min_x": -322.0,
+      "max_x": 2244.0,
+      "min_y": -260.0,
+      "max_y": 1281.0,
+      "corner_x": 2244.0,
+      "corner_y": 1281.0,
+      "diag": 2993.1650472367874,
+      "n_points": 525066,
+      "n_files": 29
+    },
+    "User4": {
+      "min_x": -1432.0,
+      "max_x": 2097.0,
+      "min_y": -218.0,
+      "max_y": 1330.0,
+      "corner_x": 2097.0,
+      "corner_y": 1330.0,
+      "diag": 3853.5885872780973,
+      "n_points": 23269162,
+      "n_files": 24
+    },
+    "User5": {
+      "min_x": -3230.0,
+      "max_x": 3030.0,
+      "min_y": -4674.0,
+      "max_y": 1590.0,
+      "corner_x": 3030.0,
+      "corner_y": 1590.0,
+      "diag": 8855.805779261422,
+      "n_points": 7203250,
+      "n_files": 10
+    },
+    "User6": {
+      "min_x": -380.0,
+      "max_x": 1737.0,
+      "min_y": -341.0,
+      "max_y": 1126.0,
+      "corner_x": 1737.0,
+      "corner_y": 1126.0,
+      "diag": 2575.6121602446283,
+      "n_points": 1931851,
+      "n_files": 2
+    },
+    "User7": {
+      "min_x": -198.0,
+      "max_x": 3851.0,
+      "min_y": -139.0,
+      "max_y": 1221.0,
+      "corner_x": 3851.0,
+      "corner_y": 1221.0,
+      "diag": 4271.299685107567,
+      "n_points": 2419734,
+      "n_files": 4
+    },
+    "User8": {
+      "min_x": -276.0,
+      "max_x": 1592.0,
+      "min_y": -216.0,
+      "max_y": 1017.0,
+      "corner_x": 1592.0,
+      "corner_y": 1017.0,
+      "diag": 2238.2388165698494,
+      "n_points": 423787,
+      "n_files": 8
+    },
+    "User9": {
+      "min_x": -167.0,
+      "max_x": 1493.0,
+      "min_y": -146.0,
+      "max_y": 902.0,
+      "corner_x": 1493.0,
+      "corner_y": 902.0,
+      "diag": 1963.1362662841314,
+      "n_points": 256400,
+      "n_files": 1
+    },
+    "User10": {
+      "min_x": -1187.0,
+      "max_x": 1688.0,
+      "min_y": -1211.0,
+      "max_y": 3560.0,
+      "corner_x": 1688.0,
+      "corner_y": 3560.0,
+      "diag": 5570.284193827098,
+      "n_points": 266671,
+      "n_files": 1
+    },
+    "User11": {
+      "min_x": 0.0,
+      "max_x": 1919.0,
+      "min_y": 0.0,
+      "max_y": 1079.0,
+      "corner_x": 1919.0,
+      "corner_y": 1079.0,
+      "diag": 2201.5453663279345,
+      "n_points": 2083087,
+      "n_files": 40
+    },
+    "User12": {
+      "min_x": -198.0,
+      "max_x": 1760.0,
+      "min_y": -315.0,
+      "max_y": 1076.0,
+      "corner_x": 1760.0,
+      "corner_y": 1076.0,
+      "diag": 2401.800366391845,
+      "n_points": 3552747,
+      "n_files": 17
+    },
+    "User13": {
+      "min_x": -574.0,
+      "max_x": 2518.0,
+      "min_y": -1655.0,
+      "max_y": 2050.0,
+      "corner_x": 2518.0,
+      "corner_y": 2050.0,
+      "diag": 4825.71124291539,
+      "n_points": 1718535,
+      "n_files": 19
+    },
+    "User14": {
+      "min_x": -1869.0,
+      "max_x": 2287.0,
+      "min_y": -635.0,
+      "max_y": 1785.0,
+      "corner_x": 2287.0,
+      "corner_y": 1785.0,
+      "diag": 4809.234450512888,
+      "n_points": 1557274,
+      "n_files": 20
+    },
+    "User15": {
+      "min_x": -1944.0,
+      "max_x": 4645.0,
+      "min_y": -871.0,
+      "max_y": 1857.0,
+      "corner_x": 4645.0,
+      "corner_y": 1857.0,
+      "diag": 7131.402737189928,
+      "n_points": 7014941,
+      "n_files": 52
+    },
+    "User16": {
+      "min_x": -252.0,
+      "max_x": 1681.0,
+      "min_y": -270.0,
+      "max_y": 1006.0,
+      "corner_x": 1681.0,
+      "corner_y": 1006.0,
+      "diag": 2316.1746479918133,
+      "n_points": 1093570,
+      "n_files": 6
+    },
+    "User17": {
+      "min_x": -201.0,
+      "max_x": 2143.0,
+      "min_y": -154.0,
+      "max_y": 1267.0,
+      "corner_x": 2143.0,
+      "corner_y": 1267.0,
+      "diag": 2741.0904764345155,
+      "n_points": 1569391,
+      "n_files": 18
+    },
+    "User18": {
+      "min_x": -638.0,
+      "max_x": 4341.0,
+      "min_y": -426.0,
+      "max_y": 1661.0,
+      "corner_x": 4341.0,
+      "corner_y": 1661.0,
+      "diag": 5398.704474223422,
+      "n_points": 15822006,
+      "n_files": 59
+    },
+    "User19": {
+      "min_x": -1141.0,
+      "max_x": 4438.0,
+      "min_y": -2174.0,
+      "max_y": 7517.0,
+      "corner_x": 4438.0,
+      "corner_y": 7517.0,
+      "diag": 11182.160882405511,
+      "n_points": 9955323,
+      "n_files": 8
+    },
+    "User20": {
+      "min_x": -5397.0,
+      "max_x": 5656.0,
+      "min_y": -3329.0,
+      "max_y": 6535.0,
+      "corner_x": 5656.0,
+      "corner_y": 6535.0,
+      "diag": 14814.428946132213,
+      "n_points": 1746068,
+      "n_files": 30
+    },
+    "User21": {
+      "min_x": -317.0,
+      "max_x": 1545.0,
+      "min_y": -109.0,
+      "max_y": 1837.0,
+      "corner_x": 1545.0,
+      "corner_y": 1837.0,
+      "diag": 2693.3176567200535,
+      "n_points": 2344640,
+      "n_files": 24
+    }
+  },
+  "fallback": {
+    "min_x": -5397.0,
+    "max_x": 6159.0,
+    "min_y": -4674.0,
+    "max_y": 7517.0,
+    "corner_x": 6159.0,
+    "corner_y": 7517.0,
+    "diag": 16797.66701062978,
+    "n_points": 0,
+    "n_files": 0
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "dataset": "balabit",
+  "scan_root": "/storage1/fs1/sibai/Active/jayden/VMD/MD/Data/Balabit-dataset/training_files",
+  "n_users": 10,
+  "users": {
+    "user7": {
+      "max_x": 1279.0,
+      "max_y": 799.0
+    },
+    "user9": {
+      "max_x": 1363.0,
+      "max_y": 767.0
+    },
+    "user12": {
+      "max_x": 1919.0,
+      "max_y": 1079.0
+    },
+    "user15": {
+      "max_x": 1919.0,
+      "max_y": 1079.0
+    },
+    "user16": {
+      "max_x": 1919.0,
+      "max_y": 1079.0
+    },
+    "user20": {
+      "max_x": 1439.0,
+      "max_y": 899.0
+    },
+    "user21": {
+      "max_x": 1363.0,
+      "max_y": 767.0
+    },
+    "user23": {
+      "max_x": 1279.0,
+      "max_y": 799.0
+    },
+    "user29": {
+      "max_x": 1919.0,
+      "max_y": 1079.0
+    },
+    "user35": {
+      "max_x": 1363.0,
+      "max_y": 767.0
+    }
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "dataset": "balabit",
+  "scan_root": "/storage1/fs1/sibai/Active/jayden/VMD/MD/Data/Balabit-dataset/training_files",
+  "n_points": 1926846,
+  "n_files": 65,
+  "n_users": 10,
+  "users": {
+    "user7": {
+      "min_x": 0.0,
+      "max_x": 1279.0,
+      "min_y": 0.0,
+      "max_y": 799.0,
+      "corner_x": 1279.0,
+      "corner_y": 799.0,
+      "diag": 1508.0590174127801,
+      "n_points": 377501,
+      "n_files": 7
+    },
+    "user9": {
+      "min_x": 0.0,
+      "max_x": 1363.0,
+      "min_y": 0.0,
+      "max_y": 767.0,
+      "corner_x": 1363.0,
+      "corner_y": 767.0,
+      "diag": 1563.9878516152228,
+      "n_points": 385596,
+      "n_files": 7
+    },
+    "user12": {
+      "min_x": 0.0,
+      "max_x": 1919.0,
+      "min_y": 0.0,
+      "max_y": 1079.0,
+      "corner_x": 1919.0,
+      "corner_y": 1079.0,
+      "diag": 2201.5453663279345,
+      "n_points": 211532,
+      "n_files": 7
+    },
+    "user15": {
+      "min_x": 0.0,
+      "max_x": 1919.0,
+      "min_y": 0.0,
+      "max_y": 1079.0,
+      "corner_x": 1919.0,
+      "corner_y": 1079.0,
+      "diag": 2201.5453663279345,
+      "n_points": 123119,
+      "n_files": 6
+    },
+    "user16": {
+      "min_x": 0.0,
+      "max_x": 1919.0,
+      "min_y": 0.0,
+      "max_y": 1079.0,
+      "corner_x": 1919.0,
+      "corner_y": 1079.0,
+      "diag": 2201.5453663279345,
+      "n_points": 188020,
+      "n_files": 6
+    },
+    "user20": {
+      "min_x": 0.0,
+      "max_x": 1439.0,
+      "min_y": 0.0,
+      "max_y": 899.0,
+      "corner_x": 1439.0,
+      "corner_y": 899.0,
+      "diag": 1696.7386363255832,
+      "n_points": 238579,
+      "n_files": 7
+    },
+    "user21": {
+      "min_x": 0.0,
+      "max_x": 1363.0,
+      "min_y": 0.0,
+      "max_y": 767.0,
+      "corner_x": 1363.0,
+      "corner_y": 767.0,
+      "diag": 1563.9878516152228,
+      "n_points": 104890,
+      "n_files": 7
+    },
+    "user23": {
+      "min_x": 0.0,
+      "max_x": 1279.0,
+      "min_y": 0.0,
+      "max_y": 799.0,
+      "corner_x": 1279.0,
+      "corner_y": 799.0,
+      "diag": 1508.0590174127801,
+      "n_points": 106965,
+      "n_files": 6
+    },
+    "user29": {
+      "min_x": 0.0,
+      "max_x": 1919.0,
+      "min_y": 0.0,
+      "max_y": 1079.0,
+      "corner_x": 1919.0,
+      "corner_y": 1079.0,
+      "diag": 2201.5453663279345,
+      "n_points": 105219,
+      "n_files": 7
+    },
+    "user35": {
+      "min_x": 0.0,
+      "max_x": 1363.0,
+      "min_y": 0.0,
+      "max_y": 767.0,
+      "corner_x": 1363.0,
+      "corner_y": 767.0,
+      "diag": 1563.9878516152228,
+      "n_points": 85425,
+      "n_files": 5
+    }
+  },
+  "fallback": {
+    "min_x": 0.0,
+    "max_x": 1919.0,
+    "min_y": 0.0,
+    "max_y": 1079.0,
+    "corner_x": 1919.0,
+    "corner_y": 1079.0,
+    "diag": 2201.5453663279345,
+    "n_points": 0,
+    "n_files": 0
+  }
+}

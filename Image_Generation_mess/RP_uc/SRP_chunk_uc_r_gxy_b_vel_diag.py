@@ -247,7 +247,7 @@ def main():
     parser.add_argument(
         "--data_root",
         required=True,
-        help="Data root to render (training or testing). Does not affect min/max statistics.",
+        help="要画图的数据根目录（training 或 testing）；不影响 min/max 统计。",
     )
     parser.add_argument(
         "--velocity_dist",
@@ -261,7 +261,7 @@ def main():
         "--output_size",
         type=int,
         default=448,
-        help="If > 0, resize to output_size x output_size; 0 keeps N x N.",
+        help="若 > 0，Resize 为 output_size×output_size；0 表示保持 N×N。",
     )
     parser.add_argument(
         "--v_percentile",
@@ -272,30 +272,30 @@ def main():
     parser.add_argument(
         "--scan_root",
         default=None,
-        help="Root used to scan per-user min/max. Defaults to training_files. Do not change this when generating testing data.",
+        help="扫描 per-user min/max；默认 training_files。生成 testing 时不要改。",
     )
     parser.add_argument(
         "--bounds_json",
         default=None,
-        help="Defaults to RP_uc/bounds/<dataset>_xy_bounds.json.",
+        help="默认 RP_uc/bounds/<dataset>_xy_bounds.json。",
     )
     parser.add_argument(
         "--rescan_bounds",
         action="store_true",
         default=False,
-        help="Force a rescan of the bounds JSON from scan_root.",
+        help="强制用 scan_root 重扫 bounds JSON。",
     )
     parser.add_argument(
         "--tensors",
         action="store_true",
         default=False,
-        help="Write images.npy / labels.npy / sessions.npy.",
+        help="输出 images.npy / labels.npy / sessions.npy。",
     )
     parser.add_argument(
         "--five-fold",
         action="store_true",
         default=False,
-        help="Split each session into 5 contiguous event segments in order, then window inside each segment. With --tensors, also write folds.npy with values 0-4.",
+        help="每个 session 按事件顺序切成 5 段连续事件再开窗。tensors 时多写 folds.npy，取值 0–4。",
     )
     args = parser.parse_args()
 
